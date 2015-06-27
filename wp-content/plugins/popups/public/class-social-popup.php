@@ -23,7 +23,7 @@ class SocialPopup {
 	 *
 	 * @var     string
 	 */
-	const VERSION = '1.1.1';
+	const VERSION = SPU_VERSION;
 
 	/**
 	 * Popups to use acrros files
@@ -67,7 +67,7 @@ class SocialPopup {
 	 *
 	 * @since  1.0.0
 	 */
-	var $info;
+	public $info;
 
 	/**
 	 * Initialize the plugin by setting localization and loading public scripts
@@ -84,7 +84,10 @@ class SocialPopup {
 			'hook'				=> SPU_PLUGIN_HOOK,
 			'version'			=> self::VERSION,
 			'upgrade_version'	=> '1.6.4.3',
-		);	
+			'wpml_lang'	        => defined('ICL_LANGUAGE_CODE') ? ICL_LANGUAGE_CODE : '',
+		);
+
+		$this->load_dependencies();
 
 		$this->spu_settings = apply_filters('spu/settings_page/opts', get_option( 'spu_settings' ) );
 
@@ -95,13 +98,14 @@ class SocialPopup {
 		add_action( 'wpmu_new_blog', array( $this, 'activate_new_site' ) );
 
 		// Register public-facing style sheet and JavaScript.
-		add_action( 'wp_enqueue_scripts', array( $this, 'register_scripts' ), 1 );
+		add_action( 'wp_enqueue_scripts', array( $this, 'register_scripts' ) );
+		add_action( 'wp_enqueue_scripts', array( $this, 'enqueue_scripts' ) );
 
-		//check for matches
-		add_action( 'wp_enqueue_scripts', array( $this, 'check_for_matches' ), 3 );
-
-		//print boxes
-		add_action( 'wp_footer', array( $this, 'print_boxes' ) );
+		if( empty($this->spu_settings['ajax_mode'] ) ) {
+			//print boxes
+			add_action( 'wp_footer', array( $this, 'print_boxes' ) );
+		}
+		add_action( 'init', array( $this, 'register_spu_ajax' ), 10 );
 
 		//FILTERS
 		add_filter('spu/get_info', array($this, 'get_info'), 1, 1);
@@ -116,8 +120,10 @@ class SocialPopup {
 
 		//Register shortcodes
 		add_shortcode( 'spu-facebook', array( $this, 'facebook_shortcode' ) );
+		add_shortcode( 'spu-facebook-page', array( $this, 'facebook_page_shortcode' ) );
 		add_shortcode( 'spu-twitter', array( $this, 'twitter_shortcode' ) );
 		add_shortcode( 'spu-google', array( $this, 'google_shortcode' ) );
+		add_shortcode( 'spu-close', array( $this, 'close_shortcode' ) );
 	}
 
 	/**
@@ -289,6 +295,14 @@ class SocialPopup {
 			);
 			wp_insert_post( $defaults, $wp_error );
 		}
+
+		$upgrader = new SocialPopup_Upgrader();
+		$upgrader->upgrade_plugin();
+
+		update_option('spu-version', SPU_VERSION);
+
+		do_action( 'spu/activate' );
+
 	}
 
 	/**
@@ -331,25 +345,17 @@ class SocialPopup {
 		if( defined( 'SPU_DEBUG_MODE' ) || !empty( $opts['debug'] ) ) {
 			$js_url = plugins_url( 'assets/js/public.js', __FILE__ );
 		}
+
 		wp_register_style( 'spu-public-css', plugins_url( 'assets/css/public.css', __FILE__ ), array(), self::VERSION );
 		
 		wp_register_script( 'spu-public', $js_url, array( 'jquery' ), self::VERSION, true );
 		
-		if(  !defined( 'SPU_UNLOAD_FB_JS')  && empty( $opts['facebook'] ) ) {
+		wp_register_script( 'spu-facebook', '//connect.facebook.net/'.get_locale().'/sdk.js#xfbml=1&version=v2.3', array('jquery'), self::VERSION, FALSE);
 
-			wp_register_script( 'spu-facebook', 'http://connect.facebook.net/'.get_locale().'/all.js#xfbml=1', array('jquery'), self::VERSION, FALSE);
-
-		}
-		if( ! defined( 'SPU_UNLOAD_TW_JS')  && empty( $opts['google'] ) ) {
+		wp_register_script( 'spu-twitter', '//platform.twitter.com/widgets.js', array('jquery'), self::VERSION, FALSE);
 		
-			wp_register_script( 'spu-twitter', 'http://platform.twitter.com/widgets.js', array('jquery'), self::VERSION, FALSE);
-		
-		}
-		if( ! defined( 'SPU_UNLOAD_GO_JS')  && empty( $opts['twitter'] ) ) {
-			
-			wp_register_script( 'spu-google', 'https://apis.google.com/js/plusone.js', array('jquery'), self::VERSION, FALSE);
+		wp_register_script( 'spu-google', '//apis.google.com/js/plusone.js', array('jquery'), self::VERSION, FALSE);
 
-		}	
 	}
 
 	/**
@@ -360,73 +366,129 @@ class SocialPopup {
 	public function check_for_matches() {
 
 		global $wpdb;
-		global $spu_matches;
-		global $total_shortcodes;
 
-		include_once( SPU_PLUGIN_DIR . 'public/includes/class-spu-rules.php' );
-		
+		$spu_matches = false;
+
 		$spu_rules = new Spu_Rules();
 
-		$matches = $facebook = $twitter = $google = false;
-
 		//Grab all popups ids
-		$spu_ids = $wpdb->get_results( "SELECT ID, post_content FROM $wpdb->posts WHERE post_type='spucpt' AND post_status='publish'");
-		foreach( $spu_ids as $spu ) {
-			
-			$rules = get_post_meta( $spu->ID, 'spu_rules' ,true );
+		$spu_ids = $this->get_spu_ids();
 
-			$match = $spu_rules->check_rules( $rules );
-			if( $match ) {
-				$matches = true;
-				$spu_matches[] = $spu->ID;
-				
-				$total_shortcodes[$spu->ID] = 0;
+		if( !empty($spu_ids) ) {
+			foreach ( $spu_ids as $spu ) {
 
-				//if we have matches we check for shortcodes to add scripts later
-				if( has_shortcode( $spu->post_content, 'spu-facebook' ) ){
-					$facebook = true;
-					$total_shortcodes[$spu->ID]++;
-				}				
-				if( has_shortcode( $spu->post_content, 'spu-twitter' ) ){
-					$twitter = true;
-					$total_shortcodes[$spu->ID]++;
-				}			
-				if( has_shortcode( $spu->post_content, 'spu-google' ) ){
-					$google = true;
-					$total_shortcodes[$spu->ID]++;
-					$total_shortcodes['google'] = true;
+				$rules = get_post_meta( $spu->ID, 'spu_rules', true );
+
+				$match = $spu_rules->check_rules( $rules );
+				if ( $match ) {
+					$spu_matches[] = $spu->ID;
 				}
 			}
 		}
-
-		if( $matches ) {
-
-			
-			wp_enqueue_script('spu-public');
-			wp_enqueue_style('spu-public-css');
-			wp_localize_script( 'spu-public', 'spuvar', array( 'is_admin' => current_user_can( 'administrator' ), 'disable_style' => $this->spu_settings['shortcodes_style'] ) );
-
-			if( $facebook ){
-				wp_enqueue_script( 'spu-facebook' );
-			}
-			if( $twitter ){
-				wp_enqueue_script( 'spu-twitter' );
-			}	
-
-			if( $google ){
-				wp_enqueue_script( 'spu-google' );
-			}	
-		}
-		
-	
+		return $spu_matches;
 	}
 
+	/**
+	 * Return array of popups ids
+	 */
+	function get_spu_ids() {
+		global $wpdb;
+		// IF wpml is active and spucpt is translated get correct ids for language
+		if( function_exists('icl_object_id') ) {
+			$spu_ids = $this->get_wpml_ids();
+			if(!empty($spu_ids)) {
+				return $spu_ids;
+			}
+		}
+		return $wpdb->get_results( "SELECT ID, post_content FROM $wpdb->posts WHERE post_type='spucpt' AND post_status='publish'");
+	}
+
+	/**
+	 * Function that enqueue all needed scritps and styles
+	 * @since   1.3
+	 */
+	public function enqueue_scripts() {
+
+		wp_enqueue_script('spu-public');
+		wp_enqueue_style('spu-public-css');
+		wp_localize_script( 'spu-public', 'spuvar',
+			array(
+				'is_admin' 						=> current_user_can( 'administrator' ),
+				'disable_style' 				=> isset( $this->spu_settings['shortcodes_style'] ) ? $this->spu_settings['shortcodes_style'] : '',
+				'safe_mode'						=> isset( $this->spu_settings['safe'] ) ? $this->spu_settings['safe'] : '',
+				'ajax_mode'						=> isset( $this->spu_settings['ajax_mode'] ) ? $this->spu_settings['ajax_mode'] :'',
+				'ajax_url'						=> admin_url('admin-ajax.php'),
+				'ajax_mode_url'					=> site_url('/?spu_action=spu_load&lang='.$this->info['wpml_lang']),
+				'pid'						    => get_queried_object_id(),
+				'is_front_page'				    => is_front_page(),
+				'is_category'				    => is_category(),
+				'site_url'				        => site_url(),
+				'is_archive'				    => is_archive(),
+				'seconds_confirmation_close'	=> apply_filters( 'spu/spuvar/seconds_confirmation_close', 5 ),
+			)
+		);
+		$this->enqueue_social_shortcodes();
+	}
+
+	/**
+	 * Function that runs the different checks to see if social is enqueue or not
+	 * @since   1.3
+	 */
+	private function enqueue_social_shortcodes(){
+		global $wpdb,$spuvar_social;
+
+		$spuvar_social = '';
+
+		// Check if defined or remove js in options
+		if(  !defined( 'SPU_UNLOAD_FB_JS')  && empty( $opts['facebook'] ) ) {
+
+			// Check if any popup have facebook, then enqueue js
+			if( $fb = $wpdb->get_var( "SELECT meta_value FROM $wpdb->postmeta WHERE meta_key = 'spu_fb' " ) ) {
+				
+				wp_enqueue_script( 'spu-facebook');
+				$spuvar_social['facebook'] 	= true;
+
+			}
+
+		}
+		if( ! defined( 'SPU_UNLOAD_TW_JS')  && empty( $opts['twitter'] ) ) {
+
+			if( $fb = $wpdb->get_var( "SELECT meta_value FROM $wpdb->postmeta WHERE meta_key ='spu_tw' " ) ) {
+
+				wp_enqueue_script( 'spu-twitter');
+				$spuvar_social['twitter'] 	= true;
+
+			}
+
+		}
+		if( ! defined( 'SPU_UNLOAD_GO_JS')  && empty( $opts['google'] ) ) {
+
+			if( $fb = $wpdb->get_var( "SELECT meta_value FROM $wpdb->postmeta WHERE meta_key ='spu_google' " ) ) {
+
+				wp_enqueue_script( 'spu-google');
+				$spuvar_social['google'] 	= true;
+			}
+
+		}
+		wp_localize_script( 'spu-public', 'spuvar_social', $spuvar_social);
+
+
+		//also include gravity forms if needed
+		if( $gf = $wpdb->get_var( "SELECT meta_value FROM $wpdb->postmeta WHERE meta_key ='spu_gravity' " ) ) {
+			if( function_exists('gravity_form_enqueue_scripts'))
+				gravity_form_enqueue_scripts($gf, true);
+		}
+	}
 
 	/**
 	 * [facebook_shortcode description]
-	 * @param  {[type]} $content [description]
-	 * @param  {[type]} $atts    [description]
-	 * @return {[type]}          [description]
+	 *
+	 * @param $atts
+	 * @param $content
+	 *
+	 * @internal param $ $content [description] $content [description]
+	 * @internal param $atts    [description] $atts    [description]
+	 * @return string          [description]
 	 */
 	function facebook_shortcode( $atts, $content ) {
 		
@@ -455,10 +517,34 @@ class SocialPopup {
 	}
 
 	/**
+	 * Shortcode for facebook page
+	 *
+	 * @param $atts
+	 * @param $content
+	 *
+	 * @internal param $ $content [description] $content [description]
+	 * @internal param $atts    [description] $atts    [description]
+	 * @return string          [description]
+	 */
+	function facebook_page_shortcode( $atts, $content ) {
+
+		extract( shortcode_atts( array(
+			'href' 			=> 'https://www.facebook.com/pages/Timersys/146687622031640',
+			'name' 	 	    => 'Timersys',
+			'show_faces' 	=> 'true', // false
+			'hide_cover' 	=> 'false', // true
+			'width'			=> '500',
+		), $atts ) );
+
+		return '<div class="spu-facebook-page"><div class="fb-page" data-href="'. $href .'" data-width="'.strtolower( trim( $width ) ).'" data-hide-cover="'.strtolower( trim( $hide_cover ) ).'" data-show-facepile="'.strtolower( trim( $show_faces ) ).'" data-show-posts="false"><div class="fb-xfbml-parse-ignore"><blockquote cite="'. $href .'"><a href="'. $href .'">'.esc_attr( $name ).'</a></blockquote></div></div>';
+
+	}
+
+	/**
 	 * [twitter_shortcode description]
-	 * @param  [type] $content [description]
-	 * @param  [type] $atts    [description]
-	 * @return [type]          [description]
+	 * @param  string $content [description]
+	 * @param  array $atts    [description]
+	 * @return string          [description]
 	 */
 	function twitter_shortcode( $atts, $content ) {
 
@@ -477,7 +563,7 @@ class SocialPopup {
 	 * [google_shortcode description]
 	 * @param  [type] $atts    [description]
 	 * @param  [type] $content [description]
-	 * @return [type]          [description]
+	 * @return string          [description]
 	 */
 	function google_shortcode( $atts, $content ) {
 		extract( shortcode_atts( array(
@@ -500,6 +586,15 @@ class SocialPopup {
 		return '<div class="spu-google spu-shortcode"><div class="g-plusone" data-callback="googleCB" data-onendinteraction="closeGoogle" data-recommendations="false" data-annotation="'.$annotation.'" data-size="'.$size.'" data-href="'.$url.'"></div></div>';
 	
 	}
+
+	function close_shortcode( $atts, $content ) {
+		extract( shortcode_atts( array(
+			'class' 		=> 'button-primary', 
+			'text' 			=> 'Close',
+		), $atts ) );
+
+		return '<button class="spu-close-popup '.$class.'">'.$text.'</button>';
+	}	
 	
 	/**
 	 * Returns plugin info 
@@ -532,27 +627,24 @@ class SocialPopup {
 
 	/**
 	 * Print the actual popup
-	 * @param  int $spu_id post id of the popup
-	 * @return echo the popup
+	 * @return mixed echo popup html
 	 */
 	function print_boxes(  ) {
 
-		global $spu_matches;
-		global $total_shortcodes;
+		$spu_matches = $this->check_for_matches();
 
-		//if we dont' have matches stop here
-		if( empty( $spu_matches) )
-			return;
-		// Include Helper class
-		include_once( SPU_PLUGIN_DIR . 'includes/class-spu-helper.php' );
+		//if we have matches continue
+		if( ! empty( $spu_matches) ) {
+	
+			foreach ($spu_matches as $spu_id ) {
 
-		foreach ($spu_matches as $spu_id ) {
+				include( 'views/popup.php');
 
-			include( 'views/popup.php');
-
-		} //endforeach
-		echo '<div id="fb-root" class=" fb_reset"></div>';
-
+			} //endforeach
+			echo '<div id="fb-root" class=" fb_reset"></div>';
+			
+		}			
+	
 	}
 
 	/**
@@ -564,6 +656,60 @@ class SocialPopup {
 
 		return $this->spu_settings;
 
+	}
+
+	/**
+	 * Load necessary files
+	 * @since  1.2.3
+	 */
+	private function load_dependencies(){
+		// Include Helper class
+		require_once( SPU_PLUGIN_DIR . 'includes/class-spu-helper.php' );
+		// Include Rules Class
+		require_once( SPU_PLUGIN_DIR . 'public/includes/class-spu-rules.php' );
+	}
+
+	/**
+	 * Custom ajax hook. Wp_ajax won't let us do_shortcode for example
+	 * @return  mixed Prints all spus
+	 */
+	function register_spu_ajax() {
+
+	  	if ( empty( $_REQUEST['spu_action'] ) || $_REQUEST['spu_action'] != 'spu_load' )
+    		return;
+
+	  	define( 'DOING_AJAX', TRUE );
+
+  		$this->print_boxes();	
+
+  		die();
+	}
+
+
+	/**
+	 * Return popups for current language
+	 * @return bool | array of ids
+	 */
+	protected function get_wpml_ids( ) {
+		global $wpdb;
+		$wpml_settings = get_option( 'icl_sitepress_settings', true);
+
+		if ( ! empty( $wpml_settings['custom_posts_sync_option']['spucpt'] ) ) {
+
+			$sql = "select DISTINCT * from $wpdb->posts as a
+ 					LEFT JOIN {$wpdb->prefix}icl_translations as b
+					ON a.ID = b.element_id
+					WHERE a.post_status = 'publish'
+					AND a.post_type = 'spucpt'
+					AND b.language_code = '" . esc_sql( ICL_LANGUAGE_CODE ) . "'
+					GROUP BY ID";
+
+			$ids = $wpdb->get_results( $sql );
+			if( !empty($ids) )
+				return $ids;
+		}
+
+		return false;
 	}
 
 }

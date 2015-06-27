@@ -10,7 +10,7 @@ msgstr ""
 "X-Generator: GlotPress/1.0-alpha-1000\n"
 "Project-Id-Version: Development\n"
 
-#: views/notice.php:94
+#: views/notice.php:98
 msgid "The key you entered could not be verified."
 msgstr "La clé que vous avez entrée n’a pas pu être vérifiée."
 
@@ -52,7 +52,7 @@ msgstr "Utilisé par des millions de sites, Akismet est très probablement la me
 msgid "http://akismet.com/"
 msgstr "http://akismet.com/"
 
-#: class.akismet-admin.php:781
+#: class.akismet-admin.php:785
 msgid "Please check your <a href=\"%s\">Akismet configuration</a> and contact your web host if problems persist."
 msgstr "Veuillez vérifier votre <a href=\"%s\">configuration Akismet</a> et contacter votre hébergeur si le problème persiste."
 
@@ -377,11 +377,11 @@ msgstr "Compte"
 msgid "There&#8217;s nothing in your <a href='%s'>spam queue</a> at the moment."
 msgstr "Il n&#8217;y a rien dans votre  <a href='%s'>file d'attente d'indésirables</a> pour le moment."
 
-#: class.akismet-admin.php:868
+#: class.akismet-admin.php:880
 msgid "Cleaning up spam takes time."
 msgstr "Nettoyer les commentaires indésirables prend du temps."
 
-#: class.akismet.php:1011
+#: class.akismet.php:1029
 msgid "Akismet %s requires WordPress %s or higher."
 msgstr "Akismet %s requiert WordPress %s ou supérieur."
 
@@ -491,10 +491,10 @@ msgstr "Akismet a validé ce commentaire suite à une revérification automatiqu
 msgid "View comment history"
 msgstr "Voir l&rsquo;historique du commentaire"
 
-#. #-#-#-#-#  akismet.pot (Akismet 3.1.2a1)  #-#-#-#-#
+#. #-#-#-#-#  akismet.pot (Akismet 3.1.3a1)  #-#-#-#-#
 #. Plugin Name of the plugin/theme
 #: class.akismet-admin.php:76 class.akismet-admin.php:78
-#: class.akismet-admin.php:838 views/config.php:3
+#: class.akismet-admin.php:842 views/config.php:3
 msgid "Akismet"
 msgstr "Akismet"
 
@@ -581,19 +581,19 @@ msgstr "L'état de l'abonnement - actif, annulé ou suspendu"
 msgid "Akismet FAQ"
 msgstr "FAQ d'Askimet"
 
-#: class.akismet-admin.php:871
+#: class.akismet-admin.php:883
 msgid "Since you joined us, Akismet has saved you %s days!"
 msgstr "Depuis que vous nous avez rejoint, Akismet vous a fait gagner %s jours !"
 
-#: class.akismet-admin.php:873
+#: class.akismet-admin.php:885
 msgid "Since you joined us, Akismet has saved you %d hours!"
 msgstr "Depuis que vous nous avez rejoint, Akismet vous a fait gagner %s heures !"
 
-#: class.akismet-admin.php:875
+#: class.akismet-admin.php:887
 msgid "Since you joined us, Akismet has saved you %d minutes!"
 msgstr "Depuis que vous nous avez rejoint, Akismet vous a fait gagner %s minutes !"
 
-#: class.akismet.php:1011 views/notice.php:27
+#: class.akismet.php:1029 views/notice.php:27
 msgid "Please <a href=\"%1$s\">upgrade WordPress</a> to a current version, or <a href=\"%2$s\">downgrade to version 2.4 of the Akismet plugin</a>."
 msgstr "Veuillez passer à la <a href=\"%1$s\">dernière version de WordPress</a> ou <a href=\"%2$s\">revenir à la version 2.4 de l'extension Akismet</a>."
 

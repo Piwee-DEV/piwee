@@ -35,11 +35,11 @@ class Spu_Helper {
 		);
 		
 		$is_ajax = false;
+		
 		if( isset($_POST['nonce']) && wp_verify_nonce($_POST['nonce'], 'spu_nonce') )
 		{
 			$is_ajax = true;
 		}
-		
 		
 		// Is AJAX call?
 		if( $is_ajax )
@@ -133,6 +133,8 @@ class Spu_Helper {
 					'all_pages'		=>	__("All Pages", self::$plugin_slug),
 					'front_page'	=>	__("Front Page", self::$plugin_slug),
 					'posts_page'	=>	__("Posts Page", self::$plugin_slug),
+					'category_page'	=>	__("Category Page", self::$plugin_slug),
+					'archive_page'	=>	__("Archives Page", self::$plugin_slug),
 					'top_level'		=>	__("Top Level Page (parent of 0)", self::$plugin_slug),
 					'parent'		=>	__("Parent Page (has children)", self::$plugin_slug),
 					'child'			=>	__("Child Page (has parent)", self::$plugin_slug),
@@ -202,14 +204,8 @@ class Spu_Helper {
 			
 			case "post_category" :
 				
-				$ids 			= get_all_category_ids();
-				$category_ids 	= apply_filters('spu/rules/category_ids', $ids );
-		
-				foreach($category_ids as $cat_id) 
-				{
-				  $cat_name = get_cat_name($cat_id);
-				  $choices[$cat_id] = $cat_name;
-				}
+				$categories 	= get_terms('category', array('get' => 'all', 'fields' => 'id=>name' ) );
+				$choices	= apply_filters('spu/rules/categories', $categories );	
 				
 				break;
 			
@@ -272,9 +268,14 @@ class Spu_Helper {
 		// allow custom rules rules
 		$choices = apply_filters( 'spu/rules/rule_values/' . $options['param'], $choices );
 
-		self::print_select( $choices, $options );
-		
-		
+		if( $options['param'] == 'referrer' || $options['param'] == 'post_id' ) {
+			self::print_textfield( $options );
+		} else {
+			self::print_select( $choices, $options );
+		}
+
+
+
 		// ajax?
 		if( $is_ajax )
 		{
@@ -329,7 +330,7 @@ class Spu_Helper {
 		{
 			foreach( $choices as $key => $value )
 			{
-				if( $optgroup )
+				if( isset($optgroup) )
 				{
 					// this select is grouped with optgroup
 					if($key != '') echo '<optgroup label="'.$key.'">';
@@ -361,6 +362,14 @@ class Spu_Helper {
 	}
 
 	/**
+	 * Prints a text field rule
+	 * @param $options
+	 */
+	static function print_textfield( $options ) {
+		echo '<input type="text" name="'.$options['name'].'" value="'.$options['value'].'" id="spu_rule_'.$options['group_id'].'_rule_'.$options['rule_id'].'" />';
+	}
+
+	/**
 	 * Return the box options
 	 * @param  int $id spucpt id
 	 * @since  2.0
@@ -384,6 +393,8 @@ class Spu_Helper {
 			'cookie'			=> '99',
 			'auto_hide'			=> 0,
 			'test_mode'			=> 0,
+			'conversion_close'  => '1',
+			'powered_link'      => '1',
 		);
 		
 		$opts = get_post_meta( $id, 'spu_options', true );
