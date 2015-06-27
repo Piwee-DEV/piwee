@@ -726,10 +726,13 @@ function registerResponsiveAd() {
 add_action('wp_head', 'registerResponsiveAd');
 
 function exam_plug_text_replace($content) {
- 
-  $content = str_replace("ca-pub-9594201080211682", "ca-pub-0031647560032028", $content);
-  $content = str_replace("6678475853", "8208510525", $content);
+
+    if(mt_rand(0,1) == 0) {
+        $content = str_replace("ca-pub-9594201080211682", "ca-pub-0031647560032028", $content);
+        $content = str_replace("6678475853", "8208510525", $content);
+    }
 
   return $content;
 }
+
 add_filter('widget_text', 'exam_plug_text_replace');
