@@ -730,7 +730,6 @@ function exam_plug_text_replace($content) {
     if(mt_rand(0,1) == 0) {
         $content = str_replace("ca-pub-9594201080211682", "ca-pub-0031647560032028", $content);
         $content = str_replace("6678475853", "8208510525", $content);
-        $content = str_replace("7312035054", "2503493328", $content);
     }
 
   return $content;
