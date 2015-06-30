@@ -1,11 +1,11 @@
 <?php
 /*
-Plugin Name: Really simple Facebook Twitter share buttons
+Plugin Name: Really Simple Share
 Plugin URI: http://www.whiletrue.it/really-simple-facebook-twitter-share-buttons-for-wordpress/
 Description: Puts Facebook, Twitter, LinkedIn, Google "+1", Pinterest and other share buttons of your choice above or below your posts.
-Author: WhileTrue
-Version: 3.2.2
-Author URI: http://www.whiletrue.it
+Author: Dabelon, tanaylakhani
+Version: 4.3.6
+Author URI: http://www.readygraph.com
 */
 
 /*
@@ -57,10 +57,27 @@ if (!$really_simple_share_option['disable_excerpts']) {
 	add_filter('the_excerpt', 'really_simple_share_excerpt');
 }
 
+if ($really_simple_share_option['active_buttons']['readygraph_google_search']) {
+	if (file_exists(plugin_dir_path( __FILE__ ).'/readygraph-extension.php')){
+	add_filter('the_content', 'readygraph_google_search_content');
+	add_filter('the_excerpt', 'readygraph_google_search_content');
+	}
+}
+// if ($really_simple_share_option['active_buttons']['readygraph_google_search']) {
+	// if (file_exists(plugin_dir_path( __FILE__ ).'/readygraph-extension.php')){
+	// add_filter('the_excerpt', 'readygraph_google_search_content');
+	// }
+// }
+
 
 // PUBLIC FUNCTIONS
 
 function really_simple_share_scripts () {
+  // IF PERFORMANCE MODE IS ACTIVE, CHECK SKIP BUTTONS
+  if (really_simple_share_skip_buttons(true)) {
+		return '';
+  }
+
 	really_simple_share_adjust_locale();
 	
 	global $really_simple_share_option;
@@ -122,6 +139,11 @@ function really_simple_share_scripts () {
 
 
 function really_simple_share_facebook_like_html5_bottom_scripts () {
+  // IF PERFORMANCE MODE IS ACTIVE, CHECK SKIP BUTTONS
+  if (really_simple_share_skip_buttons(true)) {
+		return '';
+  }
+
 	really_simple_share_adjust_locale();
 
 	global $really_simple_share_option;
@@ -151,6 +173,11 @@ function really_simple_share_init ($force=false) {
     }
 	}
 
+  // IF PERFORMANCE MODE IS ACTIVE, CHECK SKIP BUTTONS
+  if (really_simple_share_skip_buttons(true)) {
+		return '';
+  }
+  
 	global $really_simple_share_option;
 
 	if ($really_simple_share_option['active_buttons']['linkedin']) {
@@ -167,6 +194,13 @@ function really_simple_share_init ($force=false) {
 	if ($really_simple_share_option['active_buttons']['frype']) {
 		wp_enqueue_script('really_simple_share_frype', 'https://www.draugiem.lv/api/api.js', array(), false);
 	}
+	// Readygraph Related Tags LIB HAS TO BE IN THE HEADER
+	if ($really_simple_share_option['active_buttons']['readygraph_infolinks']) {
+		//enter something
+	}
+	if ($really_simple_share_option['active_buttons']['readygraph_google_search']) {
+		//enter something
+	}
 	if ($really_simple_share_option['active_buttons']['tumblr']) {
 		wp_enqueue_script('really_simple_share_tumblr', 'http://platform.tumblr.com/v1/share.js', array(), false, $really_simple_share_option['scripts_at_bottom']);
 	}
@@ -174,11 +208,15 @@ function really_simple_share_init ($force=false) {
     // ALWAYS IN THE HEADER, OTHERWHISE THE WIDGET IS UNABLE TO LOAD
 		wp_enqueue_script('really_simple_share_bitcoin', 'http://coinwidget.com/widget/coin.js');
 	}
-}    
-
+}
 
 function really_simple_share_style () {
-	$myStyleUrl  = plugin_dir_url (__FILE__).'style.css';
+  // IF PERFORMANCE MODE IS ACTIVE, CHECK SKIP BUTTONS
+  if (really_simple_share_skip_buttons(true)) {
+		return '';
+  }
+
+ 	$myStyleUrl  = plugin_dir_url (__FILE__).'style.css';
 	$myStyleFile = plugin_dir_path(__FILE__).'style.css';
 	if ( file_exists($myStyleFile) ) {
 	    wp_register_style('really_simple_share_style', $myStyleUrl);
@@ -188,8 +226,68 @@ function really_simple_share_style () {
 
 
 function really_simple_share_menu () {
-	add_options_page('Really simple share Options', 'Really simple share', 'manage_options', 'really_simple_share_options', 'really_simple_share_options');
-	add_options_page('Really simple share Counts', 'Really simple counts', 'manage_options', 'really_simple_share_counts',  'really_simple_share_counts');
+	if( file_exists(plugin_dir_path( __FILE__ ).'/readygraph-extension.php') && (get_option('readygraph_deleted') != "true")) {
+	global $rsftsb_menu_slug;
+	add_menu_page( __( 'Really Simple Share', 'really-simple-share' ), __( 'Really Simple Share', 'really-simple-share' ), 'admin_dashboard', 'really-simple-share', 'readygraph_rsftsb_menu_page' );
+	add_submenu_page('really-simple-share', 'Readygraph App', __( 'Readygraph App', 'really-simple-share' ), 'administrator', $rsftsb_menu_slug, 'readygraph_rsftsb_menu_page');
+	add_submenu_page('really-simple-share', 'Share Options', __( 'Share Options', 'really-simple-share' ), 'administrator', 'really-simple-share-options', 'really_simple_share_options');
+	add_submenu_page('really-simple-share', 'Share Counts', __( 'Share Counts', 'really-simple-share' ), 'administrator', 'really-simple-share-counts', 'really_simple_share_counts');
+	add_submenu_page('really-simple-share', 'Go Premium', __( 'Go Premium', 'really-simple-share' ), 'administrator', 'readygraph-go-premium', 'readygraph_rsftsb_premium_page');
+	}
+	else {
+	add_menu_page( __( 'Really Simple Share', 'really-simple-share' ), __( 'Really Simple Share', 'really-simple-share' ), 'admin_dashboard', 'really-simple-share', 'really_simple_share_options' );
+	add_submenu_page('really-simple-share', 'Share Options', __( 'Share Options', 'really-simple-share' ), 'administrator', 'really-simple-share-options', 'really_simple_share_options');
+	add_submenu_page('really-simple-share', 'Share Counts', __( 'Share Counts', 'really-simple-share' ), 'administrator', 'really-simple-share-counts', 'really_simple_share_counts');
+
+	}
+}
+
+function readygraph_rsftsb_premium_page(){
+	include('extension/readygraph/go-premium.php');
+}
+function readygraph_rsftsb_menu_page(){
+	global $wpdb;
+	$current_page = isset($_GET['ac']) ? $_GET['ac'] : '';
+	switch($current_page)
+	{
+		case 'signup-popup':
+			include('extension/readygraph/signup-popup.php');
+			break;
+		case 'invite-screen':
+			include('extension/readygraph/invite-screen.php');
+			break;
+		case 'social-feed':
+			include('extension/readygraph/social-feed.php');
+			break;
+		case 'site-profile':
+			include('extension/readygraph/site-profile.php');
+			break;
+		case 'customize-emails':
+			include('extension/readygraph/customize-emails.php');
+			break;
+		case 'deactivate-readygraph':
+			include('extension/readygraph/deactivate-readygraph.php');
+			break;
+		case 'welcome-email':
+			include('extension/readygraph/welcome-email.php');
+			break;
+		case 'retention-email':
+			include('extension/readygraph/retention-email.php');
+			break;
+		case 'invitation-email':
+			include('extension/readygraph/invitation-email.php');
+			break;	
+		case 'faq':
+			include('extension/readygraph/faq.php');
+			break;
+		case 'monetization-settings':
+			include('extension/readygraph/monetization.php');
+			break;
+		default:
+			include('extension/readygraph/admin.php');
+			break;
+	}
+
 }
 
 
@@ -212,6 +310,54 @@ function really_simple_share_content ($content) {
 
 function really_simple_share_excerpt ($content) {
 	return really_simple_share ($content, 'the_excerpt');
+}
+
+
+// FUNCTION USED TO CHECK IF I NEED TO SKIP THE SHARE BUTTONS IN THE GIVEN CONTEXT
+function really_simple_share_skip_buttons ($check_performance_mode = false) {
+	global $really_simple_share_option;
+	$option = $really_simple_share_option;
+  
+  if ($check_performance_mode) {
+    // ONLY CHECK SKIP IF PERFORMANCE MODE IS ACTIVE
+    if (isset($option['performance_mode']) && $option['performance_mode'] === false) {
+      return false;
+    }
+  }
+
+	$post_type = get_post_type();
+  if (in_array($post_type, get_post_types(array('_builtin'=>false)))) {
+		if (!$option['show_in_custom'][$post_type]) { return true; }
+    return false;
+  } else if (is_single()) {
+		if (!$option['show_in']['posts']) { return true; }
+    return false;
+	} else if (is_singular() and !is_front_page()) {
+		if (!$option['show_in']['pages']) {	return true; }
+    return false;
+	} else if (is_home() or is_front_page()) {
+		if (!$option['show_in']['home_page']) {	return true; }
+    return false;
+	} else if (is_tag()) {
+		if (!$option['show_in']['tags']) { return true; }
+    return false;
+	} else if (is_category()) {
+		if (!$option['show_in']['categories']) { return true; }
+    return false;
+	} else if (is_date()) {
+		if (!$option['show_in']['dates']) { return true; }
+    return false;
+	} else if (is_author()) {
+		//IF DISABLED INSIDE PAGES
+		if (!$option['show_in']['authors']) { return true; }
+    return false;
+	} else if (is_search()) {
+		if (!$option['show_in']['search']) { return true; }
+    return false;
+	} else {
+		// IF NONE OF PREVIOUS, IS DISABLED
+		return true;
+	}
 }
 
 
@@ -247,6 +393,11 @@ function really_simple_share ($content, $filter, $link='', $title='', $author=''
 	$option = $really_simple_share_option;
 
 	if ($filter!='shortcode') {
+    if (really_simple_share_skip_buttons()) {
+			return $content;
+    }
+    /*
+    // OLD STYLE CHECK
 		$post_type = get_post_type();
     if (in_array($post_type, get_post_types(array('_builtin'=>false)))) {
 			if (!$option['show_in_custom'][$post_type]) { return $content; }
@@ -271,6 +422,7 @@ function really_simple_share ($content, $filter, $link='', $title='', $author=''
 			// IF NONE OF PREVIOUS, IS DISABLED
 			return $content;
 		}
+    */
 	}
 	$first_shown = false; // NO PADDING FOR THE FIRST BUTTON
 	
@@ -569,8 +721,12 @@ function really_simple_share ($content, $filter, $link='', $title='', $author=''
           .'<span class="super">'.__('Subscribe', 'really-simple-share').':</span> <img src="http://www.specificfeeds.com/theme/classic/img/sf_20.png" alt="SpecificFeeds" title="SpecificFeeds" /></a>';
     } else if ($name == 'specificfeeds_follow') {
       $button_text = ($option['specificfeeds_follow_text']) ? $option['specificfeeds_follow_text'] : 'Follow';
-      $out .= '<a href="http://www.specificfeeds.com/follow" target="_blank">'
+      $out .= '<a id="email_follow" href="#email_follow" onclick="var invite = new readygraph.framework.ui.Invite();invite.set(\'visible\', true);return false;">'
           .'<img src="'.plugins_url('images/specificfeeds_follow.png',__FILE__).'" alt="Email, RSS" title="Email, RSS" /> '.stripslashes($button_text).'</a>';
+    } else if ($name == 'readygraph_infolinks') {
+		//do 
+    }else if ($name == 'readygraph_google_search') {
+		//do 
     } else if ($name == 'frype') {
       // GENERATE DIFFERENT IDS FOR BUTTONS IN THE SAME PAGE
       $random_id = rand(1,100000);
@@ -725,6 +881,14 @@ function really_simple_share_get_options_stored () {
   	$option['specificfeeds_follow_text'] = 'Follow';
 		$option['sort'] = 'specificfeeds_follow,'.$option['sort'];
 	}	
+	if (isset($option['sort']) && $option['sort'] != '' && strpos($option['sort'], 'readygraph_infolinks')===false) {
+		// Versions below 3.1.5 compatibility
+		$option['sort'] .= ',readygraph_infolinks';
+	}
+	if (isset($option['sort']) && $option['sort'] != '' && strpos($option['sort'], 'readygraph_google_search')===false) {
+		// Versions below 3.1.5 compatibility
+		$option['sort'] .= ',readygraph_google_search';
+	}
 	if (isset($option['sort']) && $option['sort'] != '' && strpos($option['sort'], 'frype')===false) {
 		// Versions below 3.1.5 compatibility
 		$option['sort'] .= ',frype';
@@ -752,7 +916,7 @@ function really_simple_share_get_options_stored () {
 function really_simple_share_get_options_default () {
 	$option = array();
 	$option['active_buttons'] = array('facebook_like'=>true, 
-    'twitter'=>true, 'google1'=>true, 'specificfeeds_follow'=>true,
+    'twitter'=>true, 'google1'=>true, 'specificfeeds_follow'=>true,'readygraph_infolinks'=>true,'readygraph_google_search'=>true,
     'facebook_share_new'=>false, 'google_share'=>false,
 		'linkedin'=>false, 'digg'=>false, 'stumbleupon'=>false, 'hyves'=>false, 'email'=>false, 
 		'reddit'=>false, 'flattr'=>false, 'pinterest'=>false, 'tipy'=>false, 'buffer'=>false, 
@@ -762,11 +926,8 @@ function really_simple_share_get_options_default () {
 		'digg'=>'100', 'stumbleupon'=>'100', 'hyves'=>'100', 'email'=>'40', 
 		'reddit'=>'100', 'google1'=>'80', 'google_share'=>'110', 'flattr'=>'120', 'pinterest'=>'90', 'tipy'=>'120', 
 		'buffer'=>'100', 'tumblr'=>'100', 'facebook_share'=>'100', 'pinzout'=>'75', 'rss'=>'150', 'print'=>'40', 'youtube'=>'140',
-    'bitcoin'=>'120', 'litecoin'=>'120', 'specificfeeds'=>'110', 'specificfeeds_follow'=>'110', 'frype'=>'110');
-	$option['sort'] = implode(',',array('facebook_like', 'twitter', 'google1', 'specificfeeds_follow', 'facebook_share_new', 'google_share', 
-    'linkedin', 'pinterest', 'digg', 'stumbleupon', 'hyves', 'email', 
-		'reddit', 'flattr', 'tipy', 'buffer', 'tumblr', 'facebook_share', 'pinzout', 'rss', 'print', 'youtube',
-    'bitcoin', 'litecoin', 'specificfeeds', 'frype'));
+    'bitcoin'=>'120', 'litecoin'=>'120', 'specificfeeds'=>'110', 'specificfeeds_follow'=>'110','readygraph_infolinks'=>'110','readygraph_google_search'=>'110', 'frype'=>'110');
+	$option['sort'] = implode(',',array('facebook_like', 'twitter', 'google1', 'specificfeeds_follow','readygraph_infolinks','readygraph_google_search', 'facebook_share_new', 'google_share', 'linkedin', 'pinterest', 'digg', 'stumbleupon', 'hyves', 'email', 'reddit', 'flattr', 'tipy', 'buffer', 'tumblr', 'facebook_share', 'pinzout', 'rss', 'print', 'youtube','bitcoin', 'litecoin', 'specificfeeds', 'frype'));
 	$option['position'] = 'below';
 	$option['show_in'] = array('posts'=>true, 'pages'=>true, 'home_page'=>true, 'tags'=>true, 'categories'=>true, 'dates'=>true, 'authors'=>true, 'search'=>true);
 	$option['show_in_custom'] = array();
@@ -779,7 +940,8 @@ function really_simple_share_get_options_default () {
 	$option['disable_default_styles'] = false;
 	$option['disable_excerpts'] = false;
 	$option['use_shortlink'] = false;
-	$option['scripts_at_bottom'] = false;
+	$option['scripts_at_bottom'] = true;
+	$option['performance_mode'] = false;
 
 	$option['facebook_like_appid'] = '';
 	$option['facebook_like_html5'] = true;
@@ -810,4 +972,55 @@ function really_simple_share_get_options_default () {
 	$option['twitter_follow'] = '';
 	$option['twitter_via'] = '';
 	return $option;
+}
+
+function rsftsb_install() {
+	add_option('readygraph_tutorial', 'true');
+	add_option('readygraph_connect_anonymous', 'false');
+	add_option('rg_rsftsb_plugin_do_activation_redirect', true);
+	add_option('readygraph_related_tags_install', "true");
+}
+if( file_exists(plugin_dir_path( __FILE__ ).'/readygraph-extension.php' )) {
+include "readygraph-extension.php";
+}
+else {
+
+}
+register_activation_hook(__FILE__, 'rsftsb_install');
+
+function rsftsb_rrmdir($dir) {
+  if (is_dir($dir)) {
+    $objects = scandir($dir);
+    foreach ($objects as $object) {
+      if ($object != "." && $object != "..") {
+        if (filetype($dir."/".$object) == "dir") 
+           rsftsb_rrmdir($dir."/".$object); 
+        else unlink   ($dir."/".$object);
+      }
+    }
+    reset($objects);
+    rmdir($dir);
+  }
+  $del_url = plugin_dir_path( __FILE__ );
+  unlink($del_url.'/readygraph-extension.php');
+ $setting_url="admin.php?page=really-simple-share-options";
+  echo'<script> window.location="'.admin_url($setting_url).'"; </script> ';
+}
+function rsftsb_delete_rg_options() {
+delete_option('readygraph_access_token');
+delete_option('readygraph_application_id');
+delete_option('readygraph_refresh_token');
+delete_option('readygraph_email');
+delete_option('readygraph_settings');
+delete_option('readygraph_delay');
+delete_option('readygraph_enable_sidebar');
+delete_option('readygraph_auto_select_all');
+delete_option('readygraph_enable_notification');
+delete_option('readygraph_enable_branding');
+delete_option('readygraph_send_blog_updates');
+delete_option('readygraph_send_real_time_post_updates');
+delete_option('readygraph_popup_template');
+delete_option('readygraph_upgrade_notice');
+delete_option('readygraph_connect_anonymous');
+delete_option('readygraph_connect_anonymous_app_secret');
 }

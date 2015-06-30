@@ -1,20 +1,22 @@
-=== Popups - Wordpress Popups ===
+=== Popups - WordPress Popup ===
 Contributors: timersys
 Donate link: https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=K4T6L69EV9G2Q
-Tags:  twitter,google+, facebook,Popups, twitter follow, facebook like, google plus,social boost, social splash, popup, facebook popup, scroll popups, popups, wordpress popup, wp popups
+Tags:  popup,twitter,google+, facebook,Popups, twitter follow, facebook like, google plus,social boost, social splash, postmatic, mailpoet, facebook popup, scroll popups, popups, wordpress popup, wp popups, cf7, gf, gravity forms, contact form 7, ifs, infusion soft, subscribe
 Requires at least: 3.6
-Tested up to: 4.0.0
-Stable tag: 1.1.1
-Text Domain: spucpt
+Tested up to: 4.2.2
+Stable tag: 1.3.2.2
+Text Domain: spu
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
-Increase your followers ratio 40% with the new Popups - Multiple popup options, scroll triggered popups with multiple options
+Most complete free Popups plugin, scroll triggered popups, compatible with social networks, Gravity Forms, Ninja Forms, Contact form 7, Mailpoet, Mailchimp for WP, Postmatic, etc
 
 == Description ==
 
+
 The new Popups plugin can display multiple popups. Is the perfect solution to increase your social followers, your mailing lists by adding a form like mailchimp or to display any important message in a simple popup. 
 
+It's compatible with the major form plugins like : Gravity Forms, Ninja Forms, Contact form 7, Jetpack, Mailpoet, Mailchimp for WP, Postmatic, etc
 
 There are multiple display filters that can be combined:
 
@@ -23,10 +25,12 @@ There are multiple display filters that can be combined:
 * Filter users that never commented
 * Filter users that arrived via another page on your site
 * Filter users via roles
+* Show popup depending on referrer
 * Show popup to logged / non logged users
 * Show or not to mobile and tablet users
 * Show depending on post type, post template, post name, post format, post status and post taxonomy
 * Show depending on page template, if page is parent, page name, page type
+* Geotarget popups using the [Geotargeting plugin](http://wp.timersys.com/geotargeting/)
 
 = Available Settings =
 
@@ -36,11 +40,26 @@ There are multiple display filters that can be combined:
 * Change font color, background, borders, etc
 * You can also configure background opacity.
 * Days until popup shows again
+* Ajax mode to make popups cache compatible
+* Shortcodes for social networks available
+* Compatible with Gravity Forms, Infusion Soft, Contact form 7, Ninja forms jetpack forms and much more
 
-= Premium Version = 
-
-Check the **new premium version** available in ([http://wp.timersys.com/popups/](http://wp.timersys.com/popups/))
-
+> <strong>Premium Version</strong><br>
+> 
+> Check the **new premium version** available in ([https://wp.timersys.com/popups/](http://wp.timersys.com/popups/?utm_source=readme%20file&utm_medium=readme%20links&utm_campaign=Popups%20Premium))
+>
+> * Beautiful optin forms for popular mail providers like
+> * Currently supporting MailChimp, Aweber, Postmatic, Mailpoet
+> * Track impressions and Conversions of social networks and forms like CF7 or Gravity forms
+> * Track impressions and Conversions in Google Analytics
+> * 8 New animations effects
+> * Exit Intent technology
+> * New trigger methods
+> * Timer for auto closing
+> * Ability to disable close button
+> * Ability to disable Advanced close methods like esc or clicking outside of the popup
+> * Premium support
+> 
 
 = Plugin's Official Site =
 
@@ -49,6 +68,11 @@ Popups ([http://wp.timersys.com/free-plugins/social-popup/](http://wp.timersys.c
 = Github = 
 
 Fork me in https://github.com/timersys/popups/
+
+= Available Languages = 
+
+* Serbo-Croatian - Borisa - http://www.webhostinghub.com/
+* Spanish - Andrew Kurtis - http://www.webhostinghub.com/
 
 = Install Multiple plugins at once with WpFavs  =
 
@@ -86,6 +110,132 @@ Yes you can add the ([following codes](https://gist.github.com/timersys/84536144
 Yes if you need to debug you can use uncompressed javascript by addings ([this code](https://gist.github.com/timersys/60823b62cd1050dab032)) to your functions.php
 
 == Changelog ==
+
+= 1.3.2.2 =
+* new Facebook page js was not being loaded if you didn't have another popup with fb shortcode
+
+= 1.3.2.1 =
+* Comit failed and minified file wasn't uploaded
+
+= 1.3.2 =
+* Added support for postmatic forms
+* Fixed Centering of shortcodes
+* Added new facebook page shortcode
+
+= 1.3.1.2 =
+* Hotfix with problems in ajax mode. Sorry :)
+* Added Imagesloaded library
+
+= 1.3.1.1 =
+* Plugin now disabled ajax on forms that are not compatible with it
+* Added some visuals on backend
+* Code changes for premium version
+* Fixed bug when multiple images are use in a post
+
+= 1.3.1 =
+* Fixed bug popup not closing when using conversion close option
+* Changed ajax mode to be on by default
+
+= 1.3.0.3 =
+* Social providers not loading on https sites
+* Fixed bug preventing popups to show on non ajax mode
+
+= 1.3.0.2 =
+* Fixed bug preventing to save settings
+* Fixed bug with popups not closing
+
+= 1.3.0.1 =
+
+* New editor style only show on popups now
+* Fixed bug with optin in premium version
+
+= 1.3 =
+
+* Added new option to keep popup open on conversion
+* Added spanish language
+* Added "powered by" link with affiliate support
+* Improved popups style in admin area
+* User can now remove ajax from generic form by added .spu-disable-ajax class
+* Fixed bug when not using social shortcodes
+* Updated core to work with latest premium version
+
+= 1.2.3.5 =
+
+* Added IFS (infusion soft) support
+* Added display rule - Post ID
+* Added display rule - Categories / Archives
+* Now both version are shown if you use premium
+
+= 1.2.3.4 =
+
+* Added referrer display rule
+* Fixed spuvar_social undefined when not using wordpress jquery
+* Fixed wpml support in ajax mode
+* Added trigger events in javascript so devs can hook in
+* Added geotargeting support in popups using [Geotargeting plugin](http://wp.timersys.com/geotargeting/)
+* Fixed undefined variable in admin
+
+= 1.2.3.3 =
+
+* Added Serbo-Croatian language
+* Removed track function from premium plugin that was causing error on form submission
+* Fixed error that was preventing form submission in ajax mode
+
+= 1.2.3.2 =
+
+* Improved popup center
+* Improved popup in mobile for different effects / positions / popup sizes
+* WPML compatibility ( Sitepress Multilanguage )
+* Fixed javascript error preventing some basics functions as closing popup on fb like
+
+
+= 1.2.3.1 =
+
+* Hotfix- Bug with ajax mode & testmode preventing plugin to work. Please update
+
+= 1.2.3 =
+
+* Added Ajax mode in settings page to make popups compatible with cache plugins
+* Added a close button shortcode
+* Fixed bug with settings page
+* Fixed bug detecting triggered clicks on iphone 6
+* Some other minor bugfixes
+
+= 1.2.2.2 =
+
+* Improved and fixed generic form compatiblity and m4wp
+
+= 1.2.2.1 =
+
+* Fixed bug when images where used on popup
+* Fixed bug with size of popup not working fine
+
+= 1.2.2 =
+
+* Fixed compability with events calendar
+* Fixed compability with [mc4wp] (Mail chimp for WordPress)
+* Fixed bug with popup auto dissapearing by programatically clicks of themes/plugins
+* Fixed popup in mobile to let users scroll it
+* Fixed bug with contact form 7 plugin support
+* Small bugfixes
+
+= 1.2.1 =
+
+* Added support for Contact Form 7, Gravity Forms and most of other generic forms
+* Added function to close popup when user actually follow/like
+* Fixed undefined notices
+
+
+
+= 1.2 =
+
+* Fixed permissions to edit popups settings
+* Update Mobile detect class
+* Added safe mode
+* Added js to fix facebook width bug "failed to resize in 45s"
+* Added qTranslate support
+* Fixed bug when disabling shortcodes js in settings page
+* General js fixes
 
 = 1.1.1 =
 

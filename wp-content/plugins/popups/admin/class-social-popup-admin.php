@@ -10,10 +10,7 @@
  */
 
 
-define( SPU_ADMIN_DIR , plugin_dir_path(__FILE__) );
-
-// Include Helper class
-include_once( SPU_PLUGIN_DIR . 'includes/class-spu-helper.php' );
+define( 'SPU_ADMIN_DIR' , plugin_dir_path(__FILE__) );
 
 
 /**
@@ -56,6 +53,15 @@ class SocialPopup_Admin {
 	 * @var      bool
 	 */
 	protected $premium = false;
+
+	/**
+	 * Helper function
+	 *
+	 * @since    1.1
+	 *
+	 * @var      bool
+	 */
+	protected $helper = '';
 	
 	/**
 	 * Initialize the plugin by loading admin scripts & styles and adding a
@@ -68,6 +74,9 @@ class SocialPopup_Admin {
 
 		$plugin = SocialPopup::get_instance();
 		$this->plugin_slug = $plugin->get_plugin_slug();
+
+		// helper funcs
+		$this->helper = new Spu_Helper;
 
 		//settings name
 		$this->options_name		= $this->plugin_slug .'_settings';
@@ -83,11 +92,12 @@ class SocialPopup_Admin {
 
 		// add settings page
 		add_action('admin_menu' , array( $this, 'add_settings_menu' ) );
-		
+
 		//Add our metaboxes
 		add_action( 'add_meta_boxes', array( $this, 'add_meta_boxes' ) );
+
 		//Save metaboxes
-		add_action( 'save_post', array( $this, 'save_meta_options' ), 20 );
+		add_action( 'save_post_spucpt', array( $this, 'save_meta_options' ), 20 );
 
 		// Load admin style sheet and JavaScript.
 		add_action( 'admin_enqueue_scripts', array( $this, 'enqueue_admin_styles' ) );
@@ -101,11 +111,11 @@ class SocialPopup_Admin {
 		add_filter('spu/get_taxonomies', array($this, 'get_taxonomies'), 1, 3);
 
 		//AJAX Actions	
-		add_action('wp_ajax_spu/field_group/render_rules', array( 'Spu_Helper', 'ajax_render_rules' ) );
+		add_action('wp_ajax_spu/field_group/render_rules', array( $this->helper, 'ajax_render_rules' ) );
 
 		//Tinymce
 		add_filter( 'tiny_mce_before_init', array($this, 'tinymce_init') );
-
+		add_action( 'admin_init', array( $this, 'editor_styles' ) );
 	}
 
 	/**
@@ -132,9 +142,13 @@ class SocialPopup_Admin {
 	 * @return void
 	 */
 	function register_cpt() {
-		
+
+		$name = 'Popups v' . SocialPopup::VERSION;
+		if( class_exists('PopupsP') ){
+			$name .= ' - Premium v'. PopupsP::VERSION;
+		}
 		$labels = array(
-			'name'               => _x( 'Popups v' . SocialPopup::VERSION , 'post type general name', $this->plugin_slug ),
+			'name'               => $name,
 			'singular_name'      => _x( 'Popups', 'post type singular name', $this->plugin_slug ),
 			'menu_name'          => _x( 'Popups', 'admin menu', $this->plugin_slug ),
 			'name_admin_bar'     => _x( 'Popups', 'add new on admin bar', $this->plugin_slug ),
@@ -160,15 +174,15 @@ class SocialPopup_Admin {
 			'rewrite'            => array( 'slug' => 'spucpt' ),
 			'capability_type'    => 'post',
 			'capabilities' => array(
-		        'publish_posts' 		=> 'manage_options',
-		        'edit_posts' 			=> 'manage_options',
-		        'edit_others_posts' 	=> 'manage_options',
-		        'delete_posts' 			=> 'manage_options',
-		        'delete_others_posts' 	=> 'manage_options',
-		        'read_private_posts' 	=> 'manage_options',
-		        'edit_post' 			=> 'manage_options',
-		        'delete_post' 			=> 'manage_options',
-		        'read_post' 			=> 'manage_options',
+		        'publish_posts' 		=> apply_filters( 'spu/settings_page/roles', 'manage_options'),
+		        'edit_posts' 			=> apply_filters( 'spu/settings_page/roles', 'manage_options'),
+		        'edit_others_posts' 	=> apply_filters( 'spu/settings_page/roles', 'manage_options'),
+		        'delete_posts' 			=> apply_filters( 'spu/settings_page/roles', 'manage_options'),
+		        'delete_others_posts' 	=> apply_filters( 'spu/settings_page/roles', 'manage_options'),
+		        'read_private_posts' 	=> apply_filters( 'spu/settings_page/roles', 'manage_options'),
+		        'edit_post' 			=> apply_filters( 'spu/settings_page/roles', 'manage_options'),
+		        'delete_post' 			=> apply_filters( 'spu/settings_page/roles', 'manage_options'),
+		        'read_post' 			=> apply_filters( 'spu/settings_page/roles', 'manage_options'),
 		    ),
 			'has_archive'        => false,
 			'hierarchical'       => false,
@@ -188,27 +202,45 @@ class SocialPopup_Admin {
 	 */
 	public function add_settings_menu() {
 
-		add_submenu_page('edit.php?post_type=spucpt', 'Settings', 'Settings', 'edit_posts', 'spu_settings', array( $this, 'settings_page' ) );
+		add_submenu_page('edit.php?post_type=spucpt', 'Settings', 'Settings', apply_filters( 'spu/settings_page/roles', 'manage_options'), 'spu_settings', array( $this, 'settings_page' ) );
 	
 	}
+
+
 
 	/**
 	 * Settings page of the plugin
 	 * @since  1.1
 	 * @return  void
 	 */	
-	public function settings_page(){
+	public function settings_page() {
 
-		if (  isset( $_POST['spu_nonce'] ) && wp_verify_nonce( $_POST['spu_nonce'], 'spu_save_settings' ) ) {
+		$defaults = apply_filters( 'spu/settings_page/defaults_opts', array(
+			'aff_link'         => '',
+			'ajax_mode'        => '1',
+			'debug'            => '',
+			'safe'             => '',
+			'shortcodes_style' => '',
+			'facebook'         => '',
+			'google'           => '',
+			'twitter'          => '',
+			'spu_license_key'  => '',
+			'ua_code'          => '',
+			'mc_api'           => '',
+		));
+		$opts = apply_filters( 'spu/settings_page/opts', get_option( 'spu_settings', $defaults ) );
 
-			update_option( 'spu_settings' , esc_sql( $_POST['spu_settings'] ) );
-		
-		}	
-		$opts = apply_filters('spu/settings_page/opts', get_option( 'spu_settings' ) );
+
+		if ( isset( $_POST['spu_nonce'] ) && wp_verify_nonce( $_POST['spu_nonce'], 'spu_save_settings' ) ) {
+			$opts = esc_sql( @$_POST['spu_settings'] );
+			update_option( 'spu_settings' , $opts );
+		}
+
 
 		include 'views/settings-page.php';
 
 	}
+
 	/**
 	 * Register the metaboxes for our cpt and remove others
 	 */
@@ -229,7 +261,7 @@ class SocialPopup_Admin {
 
 		add_meta_box(
 			'spu-help',
-			__( 'PopUp Shortcodes', $this->plugin_slug ),
+			'<i class="spu-icon-info spu-icon"></i>' . __( 'PopUp Shortcodes', $this->plugin_slug ),
 			array( $this, 'popup_help' ),
 			'spucpt',
 			'normal',
@@ -238,7 +270,7 @@ class SocialPopup_Admin {
 
 		add_meta_box(
 			'spu-rules',
-			__( 'PopUp Display Rules', $this->plugin_slug ),
+			'<i class="spu-icon-eye spu-icon"></i>' . __( 'PopUp Display Rules', $this->plugin_slug ),
 			array( $this, 'popup_rules' ),
 			'spucpt',
 			'normal',
@@ -247,7 +279,7 @@ class SocialPopup_Admin {
 
 		add_meta_box(
 			'spu-options',
-			__( 'Display Options', $this->plugin_slug ),
+			'<i class="spu-icon-gears spu-icon"></i>' . __( 'Display Options', $this->plugin_slug ),
 			array( $this, 'popup_options' ),
 			'spucpt',
 			'normal',
@@ -287,7 +319,7 @@ class SocialPopup_Admin {
 	 */
 	public function popup_premium( $post, $metabox ) {
 
-		include 'views/metabox-premium.php';
+		include 'views/metaboxes/metabox-premium.php';
 	}
 
 	/**
@@ -298,7 +330,7 @@ class SocialPopup_Admin {
 	 */
 	public function popup_help( $post, $metabox ) {
 
-		include 'views/metabox-help.php';
+		include 'views/metaboxes/metabox-help.php';
 	}	
 	/**
 	 * Include the metabox view for popup rules
@@ -308,9 +340,9 @@ class SocialPopup_Admin {
 	 */
 	public function popup_rules( $post, $metabox ) {
 
-		$groups = apply_filters('spu/metaboxes/get_box_rules', Spu_Helper::get_box_rules( $post->ID ), $post->ID);
+		$groups = apply_filters('spu/metaboxes/get_box_rules', $this->helper->get_box_rules( $post->ID ), $post->ID);
 
-		include 'views/metabox-rules.php';
+		include 'views/metaboxes/metabox-rules.php';
 	}	
 	/**
 	 * Include the metabox view for popup options
@@ -320,9 +352,9 @@ class SocialPopup_Admin {
 	 */
 	public function popup_options( $post, $metabox ) {
 		
-		$opts = apply_filters('spu/metaboxes/get_box_options', Spu_Helper::get_box_options( $post->ID ), $post->ID );
+		$opts = apply_filters('spu/metaboxes/get_box_options', $this->helper->get_box_options( $post->ID ), $post->ID );
 
-		include 'views/metabox-options.php';
+		include 'views/metaboxes/metabox-options.php';
 	}
 
 	/**
@@ -332,7 +364,10 @@ class SocialPopup_Admin {
 	 * @since 1.1
 	 */
 	public function metabox_donate( $post, $metabox ) {
-		include 'views/metabox-donate.php';
+		
+		$donate_metabox = apply_filters( 'spu/metaboxes/donate_metabox', dirname(__FILE__) . '/views/metaboxes/metabox-donate.php' );
+		
+		include $donate_metabox;
 	}
 	/**
 	 * Include the metabox view for support box
@@ -341,7 +376,10 @@ class SocialPopup_Admin {
 	 * @since 1.1
 	 */
 	public function metabox_support( $post, $metabox ) {
-		include 'views/metabox-support.php';
+		
+		$support_metabox = apply_filters( 'spu/metaboxes/support_metabox', dirname(__FILE__) . '/views/metaboxes/metabox-support.php' );
+		
+		include $support_metabox;
 	}
 
 	/**
@@ -351,13 +389,20 @@ class SocialPopup_Admin {
 	 * @since 1.1
 	 */
 	public function metabox_links( $post, $metabox ) {
-		include 'views/metabox-links.php';
+		
+		$links_metabox = apply_filters( 'spu/metaboxes/links_metabox', dirname(__FILE__) . '/views/metaboxes/metabox-links.php' );
+		
+		include $links_metabox;
 	}
 
 	/**
-	* Saves popup options and rules
-	*/
-	public function save_meta_options( $post_id ) {		
+	 * Saves popup options and rules
+	 *
+	 * @param $post_id
+	 *
+	 * @return mixed
+	 */
+	public function save_meta_options( $post_id ) {
 		// Verify that the nonce is set and valid.
 		if ( !isset( $_POST['spu_options_nonce'] ) || ! wp_verify_nonce( $_POST['spu_options_nonce'], 'spu_options' ) ) {
 			return $post_id;
@@ -385,9 +430,10 @@ class SocialPopup_Admin {
 			return $post_id;
 		}
 
-		$post = get_post( $post_id );
 		$opts = $_POST['spu'];
 		unset( $_POST['spu'] );
+
+		$post = get_post($post_id);
 
 		// sanitize settings
 		$opts['css']['width']	 	 = sanitize_text_field( $opts['css']['width'] );
@@ -396,6 +442,40 @@ class SocialPopup_Admin {
 		$opts['cookie'] 			 = absint( sanitize_text_field( $opts['cookie'] ) );
 		$opts['trigger_number'] 	 = absint( sanitize_text_field( $opts['trigger_number'] ) );
 
+		// Check for social shortcodes and update post meta ( we check later if we need to enqueue any social js)
+		$total_shortcodes =0;
+		if( has_shortcode( $post->post_content, 'spu-facebook' ) || has_shortcode( $post->post_content, 'spu-facebook-page' ) ){
+			$total_shortcodes++;
+			update_post_meta( $post_id, 'spu_fb', true );
+		} else {
+			delete_post_meta( $post_id, 'spu_fb');
+		}
+		if( has_shortcode( $post->post_content, 'spu-twitter' ) ){
+			$total_shortcodes++;
+			update_post_meta( $post_id, 'spu_tw', true );
+		} else {
+			delete_post_meta( $post_id, 'spu_tw');
+		}
+		if( has_shortcode( $post->post_content, 'spu-google' ) ){
+			$total_shortcodes++;
+			$opts['google'] = true;
+			update_post_meta( $post_id, 'spu_google', true );
+		} else {
+			delete_post_meta( $post_id, 'spu_google');
+		}
+		// save total shortcodes (for auto styling)
+		if( $total_shortcodes ){
+			update_post_meta( $post_id, 'spu_social', $total_shortcodes );
+		} else {
+			delete_post_meta( $post_id, 'spu_social' );
+		}
+		if( has_shortcode( $post->post_content, 'gravityform' ) ) {
+			preg_match('/\[gravityform id="([0-9]+)".*\]/i', $post->post_content, $matches);
+			if( !empty( $matches[1] ) )
+				update_post_meta( $post_id, 'spu_gravity', $matches[1]);
+		} else {
+			delete_post_meta( $post_id, 'spu_gravity' );
+		}
 
 		// save box settings
 		update_post_meta( $post_id, 'spu_options', apply_filters( 'spu/metaboxes/sanitized_options', $opts ) );
@@ -403,8 +483,6 @@ class SocialPopup_Admin {
 		// Start with rules
 		if( isset($_POST['spu_rules']) && is_array($_POST['spu_rules']) )
 		{
-			
-
 			// clean array keys
 			$groups = array_values( $_POST['spu_rules'] );
 			foreach($groups as $group_id => $group )
@@ -413,7 +491,7 @@ class SocialPopup_Admin {
 				{
 					// clean array keys
 					$groups_a[] = array_values( $group );
-		
+
 				}
 			}
 
@@ -421,7 +499,6 @@ class SocialPopup_Admin {
 			unset( $_POST['spu_rules'] );
 		}
 
-		#$this->flush_rules();
 	}
 	/**
 	 * Register and enqueue admin-specific style sheet.
@@ -438,7 +515,9 @@ class SocialPopup_Admin {
 
 		global $pagenow;
 
-		if ( get_post_type() !== 'spucpt' || !in_array( $pagenow, array( 'post-new.php', 'post.php' ) ) ) {
+		$post_type = isset($_GET['post_type']) ? $_GET['post_type'] : get_post_type();
+
+		if (  $post_type !== 'spucpt' || !in_array( $pagenow, array( 'post-new.php', 'post.php', 'edit.php' ) ) ) {
 			return;
 		}
 		wp_enqueue_style( 'spu-admin-css', plugins_url( 'assets/css/admin.css', __FILE__ ) , '', SocialPopup::VERSION );
@@ -458,11 +537,14 @@ class SocialPopup_Admin {
 	 * @return    null    Return early if no settings page is registered.
 	 */
 	public function enqueue_admin_scripts() {
-		global $pagenow;
+		global $pagenow, $post;
 
-		if ( get_post_type() !== 'spucpt' || !in_array( $pagenow, array( 'post-new.php', 'post.php' ) ) ) {
+		if ( get_post_type() !== 'spucpt' || !in_array( $pagenow, array( 'post-new.php', 'edit.php', 'post.php' ) ) ) {
 			return;
 		}
+
+		$box_id = isset( $post->ID ) ? $post->ID : '';
+
 		wp_enqueue_script( 'wp-color-picker' );
 		wp_enqueue_script( 'spu-admin-js', plugins_url( 'assets/js/admin.js', __FILE__ ) , '', SocialPopup::VERSION );
 		wp_localize_script( 'spu-admin-js', 'spu_js', 
@@ -471,8 +553,17 @@ class SocialPopup_Admin {
 					'nonce' 	=> wp_create_nonce( 'spu_nonce' ),
 					'l10n'		=> array (
 							'or'	=> __('or', $this->plugin_slug )
-						) 
+						),
+					'opts'      => $this->helper->get_box_options($box_id)
 				) 
+		);
+
+		wp_localize_script( 'spup-admin-js' , 'spup_js' ,
+				array(
+					'opts'      => $this->helper->get_box_options($box_id),
+					'spinner'   => SPU_PLUGIN_URL . 'public/assets/img/ajax-loader.gif'
+
+				)
 		);
 	}
 
@@ -533,12 +624,14 @@ class SocialPopup_Admin {
 		return $post_types;
 		
 	}
-	
+
 	/**
 	 * Get taxonomies. Used in filters rules
-	 * @param  array  $choices      [description]
+	 *
+	 * @param  array $choices [description]
 	 * @param  boolean $simple_value [description]
-	 * @return [type]                [description]
+	 *
+	 * @return array [type]                [description]
 	 */
 	function get_taxonomies( $choices, $simple_value = false ) {	
 		
@@ -591,10 +684,20 @@ class SocialPopup_Admin {
 			return $args;
 		}
 
-		$args['setup'] = 'function(ed) { if(typeof SPU_ADMIN === \'undefined\') { return; } ed.onInit.add(SPU_ADMIN.onTinyMceInit); }';
+		$args['setup'] = 'function(ed) { if(typeof SPU_ADMIN === \'undefined\') { return; } ed.onInit.add(SPU_ADMIN.onTinyMceInit);if(typeof SPUP_ADMIN === \'undefined\') { return; } ed.onInit.add(SPUP_ADMIN.onTinyMceInit); }';
 
 		return $args;
-	}	
+	}
 
+	/**
+	 * Add the stylesheet for optin in editor
+	 * @since 1.2.3.6
+	 */
+	function editor_styles() {
+		$post_type = isset($_GET['post']) ? get_post_type($_GET['post']) : '';
 
+		if( 'spucpt' == $post_type || get_post_type() == 'spucpt' || (isset( $_GET['post_type']) && $_GET['post_type'] == 'spucpt') ) {
+			add_editor_style( SPU_PLUGIN_URL . 'admin/assets/css/editor-style.css' );
+		}
+	}
 }

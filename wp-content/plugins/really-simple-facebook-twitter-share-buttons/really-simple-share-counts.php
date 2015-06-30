@@ -10,6 +10,10 @@ function really_simple_share_counts () {
 
   // INITIALIZE ALL SCRIPTS
 	global $really_simple_share_option;
+  
+  // DISABLE PERFORMANCE MODE LOCALLY, TO ENABLE STATS
+  $really_simple_share_option['performance_mode'] = false;
+  
   really_simple_share_init(true);
   really_simple_share_scripts();
   if (($really_simple_share_option['active_buttons']['facebook_like'] and $really_simple_share_option['facebook_like_html5'])
@@ -35,7 +39,7 @@ function really_simple_share_counts () {
     .really_simple_share_counts { width: 55%; }
 	</style>
   <div class="wrap">
-	<h2>'.__( 'Really simple Facebook and Twitter share buttons', 'really-simple-share').'
+	<h2>'.__( 'Really Simple Share', 'really-simple-share').'
     - '.__( 'Post/Page Counts', 'really-simple-share').'
   </h2>
 	<div id="poststuff">
