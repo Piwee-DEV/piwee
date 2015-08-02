@@ -1,5 +1,10 @@
 @media only screen and (min-width: 1024px) and (max-width: 1259px)
 {
+    .header-v2 .header-row {
+        margin-top: 0px;
+        margin-bottom: 20px;
+    }
+    
     #article-adsense-fimage {
         display: block;
     }
@@ -63,6 +68,7 @@
 /* Responsive For Mobile */
 @media only screen and (min-width: 660px) and (max-width: 1023px)
 {
+    body { background-color: white;}
 
     #article-adsense-fimage {
         display: none;
@@ -321,6 +327,13 @@
 /* Responsive For Mobile */
 @media only screen and (min-width: 480px) and (max-width: 659px)
 {
+    .header-v2 .header-row {
+        margin-top: 0px;
+        margin-bottom: 20px;
+    }
+
+    body { background-color: white;}
+
     #article-adsense-fimage {
         display: none;
     }
@@ -679,6 +692,13 @@
 /* Responsive For Mobile */
 @media only screen and (max-width: 479px)
 {
+    .header-v2 .header-row {
+        margin-top: 0px;
+        margin-bottom: 20px;
+    }
+
+    body { background-color: white;}
+
     #article-adsense-fimage {
         display: none;
     }
@@ -856,7 +876,7 @@
 		clear: both;
 		display: block;
 		overflow: hidden;
-         padding-top: 20px;
+         padding-top: 10px;
      }
 	.header-v1 nav#nav{
 		min-width: inherit;
@@ -1045,5 +1065,82 @@
     .inner-grid .article-grid .post-gallery ul.slides li a {
         height: 167px;
         min-height: 167px;
+    }
+}
+
+/* iPhone 6 */
+@media only screen and (min-width: 375px) and (max-width: 667px) {
+
+    .header-v2 .header-row {
+        margin-top: 0px;
+        margin-bottom: 20px;
+    }
+
+    body { background-color: white;}
+
+    .container,
+    .top-menu select,
+    .search-block input,
+    nav#nav select,
+    #breaking-news-in-pic .post-warpper,
+    #breaking-news-in-pic .post-warpper .post-items,
+    #breaking-news-in-pic .post-warpper .post-item,
+    #wrapper .content-wrapper,
+    #wrapper .sidebar,
+    #slider,
+    #slider.flexslider .post-warpper li,
+    .home-blog.home-big .post-image,
+    .home-blog.home-big .post-image a,
+    .home-blog.home-big .post-gallery,
+    .home-blog.home-big .post-gallery ul.slides,
+    .home-blog.home-big .post-gallery ul.slides li,
+    .home-blog.home-big .post-gallery ul.slides li a,
+    .home-blog.home-big .post-gallery ul.slides li a img,
+    .article .google-box iframe,
+    div.bd-googlemaps-shortcode iframe,
+    .home-scroll .post-warpper, .home-scroll .post-warpper .post-items,
+    .home-scroll
+    {
+        width: 350px !important;
+        min-width: 350px !important;
+    }
+
+}
+
+/* iPhone 6 plus */
+@media only screen and (min-width: 414px) and (max-width: 736px) {
+
+    .header-v2 .header-row {
+        margin-top: 0px;
+        margin-bottom: 20px;
+    }
+
+    body { background-color: white;}
+
+    .container,
+    .top-menu select,
+    .search-block input,
+    nav#nav select,
+    #breaking-news-in-pic .post-warpper,
+    #breaking-news-in-pic .post-warpper .post-items,
+    #breaking-news-in-pic .post-warpper .post-item,
+    #wrapper .content-wrapper,
+    #wrapper .sidebar,
+    #slider,
+    #slider.flexslider .post-warpper li,
+    .home-blog.home-big .post-image,
+    .home-blog.home-big .post-image a,
+    .home-blog.home-big .post-gallery,
+    .home-blog.home-big .post-gallery ul.slides,
+    .home-blog.home-big .post-gallery ul.slides li,
+    .home-blog.home-big .post-gallery ul.slides li a,
+    .home-blog.home-big .post-gallery ul.slides li a img,
+    .article .google-box iframe,
+    div.bd-googlemaps-shortcode iframe,
+    .home-scroll .post-warpper, .home-scroll .post-warpper .post-items,
+    .home-scroll
+    {
+        width: 390px !important;
+        min-width: 390px !important;
     }
 }
