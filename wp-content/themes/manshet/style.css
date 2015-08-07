@@ -20,6 +20,21 @@ Tags: fixed-width, one-column, two-columns, three-columns, threaded-comments, cu
 @font-face { font-family: 'Oswald'; font-style: normal; font-weight: 400; src: local('Oswald Regular'), local('Oswald-Regular'), url(http://themes.googleusercontent.com/static/fonts/oswald/v7/-g5pDUSRgvxvOl5u-a_WHw.woff) format('woff'); }
 @font-face { font-family: 'Oswald'; font-style: normal; font-weight: 700; src: local('Oswald Bold'), local('Oswald-Bold'), url(http://themes.googleusercontent.com/static/fonts/oswald/v7/bH7276GfdCjMjApa_dkG6T8E0i7KZn-EPnyo3HZu7kw.woff) format('woff'); }
 
+#article-adsense-fimage {
+    display: block;
+}
+
+#article-adsense-fimage-mobile {
+    display: none;
+}
+
+#article-adsense-bottom {
+    display: block;
+}
+
+#article-adsense-bottom-mobile {
+    display: none;
+}
 .vote-module {margin-bottom: 10px; clear: both;}
 .counter-display-vote {font-weight: bold; background-color: #DDD; padding: 5px; position: relative; right: 5px; -webkit-border-top-right-radius: 2px;
 -webkit-border-bottom-right-radius: 2px;

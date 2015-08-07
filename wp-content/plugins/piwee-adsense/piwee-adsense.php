@@ -84,9 +84,15 @@ function piwee_adsense()
         add_option('adsense_bottom_article', $_POST['adsense_bottom_article'])
         || update_option('adsense_bottom_article', $_POST['adsense_bottom_article']);
 
+        add_option('adsense_below_image_mobile', $_POST['adsense_below_image_mobile'])
+        || update_option('adsense_below_image_mobile', $_POST['adsense_below_image_mobile']);
+
+        add_option('adsense_bottom_article_mobile', $_POST['adsense_bottom_article_mobile'])
+        || update_option('adsense_bottom_article_mobile', $_POST['adsense_bottom_article_mobile']);
+
         ?>
 
-        <div class="updated"><p>Mise à jour effectuée</p></div>
+        <div class="updated"><p>Mise à jour effectuée !</p></div>
 
         <?php
     }
@@ -94,6 +100,8 @@ function piwee_adsense()
 
     $adsense_below_image = get_option("adsense_below_image");
     $adsense_bottom_article = get_option("adsense_bottom_article");
+    $adsense_below_image_mobile = get_option("adsense_below_image_mobile");
+    $adsense_bottom_article_mobile = get_option("adsense_bottom_article_mobile");
 
     ?>
 
@@ -111,10 +119,24 @@ function piwee_adsense()
         </div>
 
         <div>
+            <label>Code ADSENSE en dessous de l'image (mobile)</label>
+            <br>
+            <textarea name="adsense_below_image_mobile" cols="70"
+                      rows="8"><?php echo stripslashes($adsense_below_image_mobile) ?></textarea>
+        </div>
+
+        <div>
             <label>Code ADSENSE en bas de l'article</label>
             <br>
             <textarea name="adsense_bottom_article" cols="70"
                       rows="8"><?php echo stripslashes($adsense_bottom_article) ?></textarea>
+        </div>
+
+        <div>
+            <label>Code ADSENSE en bas de l'article (mobile)</label>
+            <br>
+            <textarea name="adsense_bottom_article_mobile" cols="70"
+                      rows="8"><?php echo stripslashes($adsense_bottom_article_mobile) ?></textarea>
         </div>
 
         <input type="submit" class="button" value="VALIDER">
@@ -131,7 +153,8 @@ function filter_content_adsense($content)
 
         $adsense_below_image = stripslashes(get_option("adsense_below_image"));
         $adsense_bottom_article = stripslashes(get_option("adsense_bottom_article"));
-
+        $adsense_below_image_mobile = stripslashes(get_option("adsense_below_image_mobile"));
+        $adsense_bottom_article_mobile = stripslashes(get_option("adsense_bottom_article_mobile"));
 
         $do_adsense_below_image = get_post_meta(get_the_ID(), "adsense_below_image", true);
         $do_adsense_bottom_article = get_post_meta(get_the_ID(), "adsense_bottom_article", true);
@@ -145,7 +168,7 @@ function filter_content_adsense($content)
             $firstI = $document->find("p:first img");
 
             if ($firstI->length > 0) {
-                $document->find("p:first")->after($adsense_below_image . '<br>');
+                $document->find("p:first")->after('<div id="article-adsense-fimage">' . $adsense_below_image . '</div><div id="article-adsense-fimage-mobile">' . $adsense_below_image_mobile . '</div><br>');
             }
 
             $content = $document->html();
@@ -153,7 +176,7 @@ function filter_content_adsense($content)
 
         //adsense_bottom_article
         if($do_adsense_bottom_article) {
-            $content .= '<br>' . $adsense_bottom_article;
+            $content .= '<br><div id="article-adsense-bottom">' . $adsense_bottom_article . '</div><div id="article-adsense-bottom-mobile">' . $adsense_bottom_article_mobile . '</div>';
         }
     }
 

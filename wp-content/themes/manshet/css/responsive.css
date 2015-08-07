@@ -1,5 +1,21 @@
 @media only screen and (min-width: 1024px) and (max-width: 1259px)
 {
+    #article-adsense-fimage {
+        display: block;
+    }
+
+    #article-adsense-fimage-mobile {
+        display: none;
+    }
+
+    #article-adsense-bottom {
+        display: block;
+    }
+
+    #article-adsense-bottom-mobile {
+        display: none;
+    }
+
 	.container,
 	#breaking-news-in-pic .post-warpper,
 	#breaking-news-in-pic .post-warpper .post-items,
@@ -47,6 +63,23 @@
 /* Responsive For Mobile */
 @media only screen and (min-width: 660px) and (max-width: 1023px)
 {
+
+    #article-adsense-fimage {
+        display: none;
+    }
+
+    #article-adsense-fimage-mobile {
+        display: block;
+    }
+
+    #article-adsense-bottom {
+        display: none;
+    }
+
+    #article-adsense-bottom-mobile {
+        display: block;
+    }
+
     .breadcrumbs {
         display: none;
     }
@@ -288,6 +321,22 @@
 /* Responsive For Mobile */
 @media only screen and (min-width: 480px) and (max-width: 659px)
 {
+    #article-adsense-fimage {
+        display: none;
+    }
+
+    #article-adsense-fimage-mobile {
+        display: block;
+    }
+
+    #article-adsense-bottom {
+        display: none;
+    }
+
+    #article-adsense-bottom-mobile {
+        display: block;
+    }
+
     .button-piwee-vote {
         clear: both;
         margin: 0;
@@ -630,6 +679,21 @@
 /* Responsive For Mobile */
 @media only screen and (max-width: 479px)
 {
+    #article-adsense-fimage {
+        display: none;
+    }
+
+    #article-adsense-fimage-mobile {
+        display: block;
+    }
+
+    #article-adsense-bottom {
+        display: none;
+    }
+
+    #article-adsense-bottom-mobile {
+        display: block;
+    }
 
     .breadcrumbs {
         display: none;
