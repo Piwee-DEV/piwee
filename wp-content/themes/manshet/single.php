@@ -73,7 +73,8 @@ echo $post_full ?>">
                             $content = str_replace("9566298656", "5696989724", $content);
                             $content = str_replace("6678475853", "7394048928", $content);
                             $content = str_replace("7312035054", "2503493328", $content);
-                        }
+                            $content = str_replace("3357873053", "7980959322", $content);
+			}
 
                         echo $content;
 
