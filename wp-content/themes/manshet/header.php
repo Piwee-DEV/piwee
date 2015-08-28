@@ -12,6 +12,8 @@
 
     <?php wp_head(); ?>
 
+<script type="text/javascript" src="http://ads.ayads.co/ajs.php?zid=3405"></script>
+
     <script type="text/javascript">
         window._taboola = window._taboola || [];
         _taboola.push({article: 'auto'});
